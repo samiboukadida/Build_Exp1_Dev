@@ -1,0 +1,4 @@
+amelioration:
+
+-L'utilisateur peur choir un fichier de maillage depuis n'importe qu'elle dossier du disque,
+avant: le fichier de maillage doit être du meme repertoire que executable exp1.exe

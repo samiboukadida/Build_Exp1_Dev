@@ -1,0 +1,42 @@
+# Bibliothèques OpenGL et GLUT (compatibles avec Cygwin)
+GLLIBS = -lopengl32 -lglu32 -lglut
+
+# Fichiers d'en-tête (headers)
+GLINS = -I/cygwin64/usr/include
+
+# Utiliser g++ et forcer l'architecture 64 bits
+CXX = g++
+CXXFLAGS = -m64 -fpermissive -g -Wall -Wextra -pedantic
+
+# Générer un fichier exécutable avec l'extension .exe
+all: exp1
+	@echo "Compilation terminée : exp1"
+# Compilation du fichier final en incluant les fichiers objets
+exp1:exp1.o sfem.o
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(GLLIBS)
+
+# Étape pour générer les fichiers Bison
+exp1.tab.c exp1.tab.h: exp1.y
+	bison -d exp1.y
+
+# Étape pour générer le fichier .o à partir du code Bison
+exp1.o: exp1.tab.c
+	$(CXX) $(CXXFLAGS) -c exp1.tab.c $(GLINS)
+
+
+
+# Compilation des autres fichiers .cpp en .o
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $< $(GLINS)
+
+# Nettoyage des fichiers objets et exécutables
+clean:
+	-rm -f exp1 *.o a.out *~ exp1.tab.c exp1.tab.h
+
+veryclean:
+	-rm -f *.sol *.dat *.msh plot *.eps uh1 uh2 uh3
+
+# Dépendances des fichiers objets
+sfem.o: sfem.hpp
+exp1.o: GC.hpp RNM_op.hpp RNM_tpl.hpp sfem.hpp RNM.hpp RNM_opc.hpp assertion.hpp
+
