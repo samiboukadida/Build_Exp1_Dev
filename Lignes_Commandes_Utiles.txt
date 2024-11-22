@@ -1,0 +1,20 @@
+make sfem.o //sfem.cpp, sfem.hpp => sfem.o
+
+1-//sfem.cpp  => sfem.o
+g++ -m64 -fpermissive -g -Wall -Wextra -pedantic -c sfem.cpp -o sfem.o
+
+g++ -m64 -fpermissive -g -Wall -Wextra -pedantic -Wno-unused-parameter -c sfem.cpp -o sfem.o
+
+2-//=> exp1.tab.c et exp1.tab.h 
+bison -d exp1.y  
+
+
+3-// exp1.tab.c => exp1.o
+g++ -m64 -fpermissive -g -Wall -Wextra -pedantic -c exp1.tab.c -o exp1.o
+g++ -m64 -fpermissive -g -Wall -Wextra -pedantic -Wno-unused-parameter -c exp1.tab.c -o exp1.o
+
+
+
+4-//  sfem.o exp1.o -o  =>  exp1
+g++ -m64 -fpermissive -g -Wall -Wextra -pedantic sfem.o exp1.o -o exp1 -lopengl32 -lglu32 -lglut
+
