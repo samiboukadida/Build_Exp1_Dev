@@ -17,3 +17,9 @@
 *.swp
 .history/
 *Copy
+outputs
+data.txt
+*.ps1
+*.lnk
+scripts
+cygwin64homeSamigit-prompt.sh
