@@ -80,14 +80,16 @@ Mesh::Mesh(const char*  filePath,double fac)
     f >> i0 >> i1 >> i2 >> ir;
     assert(f.good() && i0>0 && i0<=nv && i1>0 && i1<=nv && i2>0 && i2<=nv);
     triangles[i].set(vertices,i0-1,i1-1,i2-1,ir); 
-    area += triangles[i].area;}
+    area += triangles[i].area;
+  }
   
   for (i=0;i<neb;i++) { 
     f >> i0 >> i1  >> ir;
     assert(f.good() && i0>0 && i0<=nv && i1>0 && i1<=nv );
-    bedges[i].set(vertices,i0-1,i1-1,ir);}
-   BuildAdj();
-   cout << " Fin lecture : aire du maillage = " << area <<endl;  
+    bedges[i].set(vertices,i0-1,i1-1,ir);
+  }
+  BuildAdj();
+  cout << " Fin lecture : aire du maillage = " << area <<endl;  
 } 
 void Mesh::BuildAdj()
 {

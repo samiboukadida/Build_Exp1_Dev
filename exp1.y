@@ -78,7 +78,7 @@
 
   extern elemrec *elem_table;
   elemrec * putelem (const char *elem_name,int elem_type);
-  elemrec *getelem (const char *elem_name);
+  elemrec * getelem (const char *elem_name);
   int yylex(); 
   void init_table();
 
@@ -103,6 +103,8 @@
 %right  '='
 %right  '^' 			
  // %token STRING /*For Handling File Path*/
+
+ //%debug
 %%
 //============ Define the grammar rules here For Handling File Path ================
 //==================================================================================
@@ -116,8 +118,9 @@ file_expr:
 STRING  {
   /* STRING will contain the path */
   /* Pass this string (file path) to the Mesh loading logic */
+  std::cout << "Processing file: " << $1 << std::endl;
   mesh_load($1);  // Ensure this function correctly handles absolute paths
-}
+}// Placez un point d'arrêt ici pour voir si le chemin est correctement traité.
 ;
 
 //input: exp EOFFILE { cout << $1 << endl; return 0;}	// empty
@@ -131,8 +134,8 @@ line:
 exp: 	  NUM { $$ = $1; }
 | VAR { $$ = $1->value.var; }
 | VAR '=' exp { $$ = $3; $1->value.var = $3;xy=$$; cout << $1->name <<"="<<$1->value.var<<endl;}
-| FNCT '(' exp ')' { $$ = (*($1->value.fnctptr))($3); }
-| exp '+' exp { $$ = $1 + $3;         }
+| FNCT '(' exp ')' { $$ = (*($1->value.fnctptr))($3); cout << "FNCT:$1->name='" <<  $1->name << "' et de type $1->type='"<<  $1->type << "' et de var=$1->value.var='" << $1->value.var<<"'";}
+| exp '+' exp { $$ = $1 + $3; }
 | exp '-' exp { $$ = $1 - $3; }
 | exp '*' exp { $$ = $1 * $3; }
 | exp '/' exp { $$ = $1 / $3; }
@@ -151,7 +154,7 @@ exp: 	  NUM { $$ = $1; }
 std::string mesh_load(const char* filepath) {
   std::string meshPath(filepath);
   // Output the original mesh file path for debugging
-  std::cout << "Mesh file path: " << meshPath << std::endl;
+  std::cout << "Mesh file path: " << meshPath << std::endl;// Point d'arrêt ici.
   // Check if the path starts with "/c/" or similar (Cygwin style) and convert to Windows style
   if (meshPath[0] == '/' && meshPath[2] == '/') {
     // Replace "/c/" with "C:\" and similar patterns
@@ -419,7 +422,7 @@ void adaptmesh(Mesh & Th,KN<R> un){
       }
     }
   
-    nu[k]=hK*Nf+saut;//nuK
+    nu[k]=hK*Nf+saut;//nuK  // Point d'arrêt ici
     cout<<"nu["<<k<<"]="<<nu[k]<<endl;
   }
   //____ Fin de calcul d'indice d'erreur nu de chaque triangle k (nuk) ____
@@ -429,7 +432,7 @@ void adaptmesh(Mesh & Th,KN<R> un){
   for (int k=0;k<Th.nt;k++) 
     tol += nu[k];
 
-  tol=tol/Th.nt;
+  tol=tol/Th.nt;  // Point d'arrêt ici
   cout<<"tol="<<tol<<endl;
   
   //----- Tableau d'arêtes: le ----
@@ -485,11 +488,15 @@ void adaptmesh(Mesh & Th,KN<R> un){
   for (int i=0;i<nbarete;i++) { 
     int t=lee[i].t;
     int e=lee[i].e;
-    if ( nu[t] > tol ) {//critère pour découper l'arête
+    if ( nu[t] > tol ) {//critère pour découper l'arête // Point d'arrêt ici
     
       cutedge[k]=3*t+e ; 
       k=k+1;
-      cout<<" arêtes à découper"<<endl;
+      cout<<"Arête à découper => ";
+      cout<<"lee["<<i<<"].t ="<<lee[i].t <<"    lee["<<i<<"].e ="<<lee[i].e<<"    lee["<<i<<"].i0 ="<<lee[i].i0<<"    lee["<<i<<"].i1 ="<<lee[i].i1 <<endl;
+
+    }else{// affiche toutes les arêtes qui restent longues
+      cout<<"Arête reste longue"<<endl;
       cout<<"lee["<<i<<"].t ="<<lee[i].t <<"    lee["<<i<<"].e ="<<lee[i].e<<"    lee["<<i<<"].i0 ="<<lee[i].i0<<"    lee["<<i<<"].i1 ="<<lee[i].i1 <<endl;
 
     }
@@ -499,6 +506,7 @@ void adaptmesh(Mesh & Th,KN<R> un){
   cout<<"nb des  arêtes à découpe="<<nbcutedge<<endl; 
   for (int i=0;i<nbarete;i++)
     cout<<"lee["<<i<<"].t ="<<lee[i].t  <<"    lee["<<i<<"].e ="<<lee[i].e<<"    lee["<<i<<"].i0 ="<<lee[i].i0<<"    lee["<<i<<"].i1 ="<<lee[i].i1 <<endl;
+  
 
   Th.decoupe(cutedge,nbcutedge);
 }
@@ -542,6 +550,7 @@ std::string getBaseName(const std::string& rawPath) {
 //==================================================================
 
 int main (int argc, char** argv){ 
+  //yydebug = 1 ;
   ofstream ftab("ftab.txt");
   ccin = & cin; // 
   init_table ();
@@ -560,10 +569,10 @@ int main (int argc, char** argv){
   std::string baseName = getBaseName(convertedPath);
   std::cout << "Nom de fichier extrait (baseName) : " << baseName << std::endl;
 
-  Mesh Th(convertedPath.c_str(), 10.0);
+  Mesh Th(convertedPath.c_str(), 10.0);// Point d'arrêt ici
 
   for ( int adapt=0 ; adapt<3 ; adapt++ ) {//RESOLUTION 3 FOIS
-
+    cout << "Début de l'adaptation #" << adapt << endl;  // Point d'arrêt ici.
     //resolution
     cout<<"resolution"<<endl;
     KN<R> un(Th.nv);un=0.;
@@ -609,7 +618,7 @@ int main (int argc, char** argv){
       //==================== resolution ==================
       //==================================================
       x=0.;  //  donne initial  avec les conditions aux limites.
-      GradienConjugue(A,Id, b,x,Th.nv,1e-10);
+      GradienConjugue(A,Id, b,x,Th.nv,1e-10);// Point d'arrêt ici
       un = un-x ;  //un+1=un-wn
       //||un+1-un||
       {err=abs(x[0]) ;for (int k=0;k<Th.nv;k++)  if (!( abs(x[k]) < err) )  err=abs(x[k]) ;}
@@ -655,15 +664,32 @@ int main (int argc, char** argv){
     //=======cout================================================================
     cout <<"fin de résolution pour adapt="<<adapt<<endl;
     cout <<"fin de résolution "<<(adapt+1)<< " fois"<<endl;
+    cout<<"MESH COURANT:"<<endl;
+    cout << "Les vertex du mesh courant ( Coordonnées x y label)" <<endl; 
+    cout << "Les traingles du mesh courant Th ( convention Fortran base 1 : ) i0 i1 i2 lab" <<endl;
+    cout<<"Boun daryEdges of current mesh Th: i0 i1 lab"<<endl;
+    //cout<<"Th.nv="<<Th.nv<<"   Th.nt="<<Th.nt<<"   Th.neb="<<Th.neb<<endl;  
+    cout<<Th.nv<<" "<<Th.nt<<" "<<Th.neb<<endl;  
+    // Vertices x y lab
+    for(int i=0;i<Th.nv;i++){      
+      cout<<Th(i)<<endl;
+      //cout<<"Th("<<i<<")=  "<<Th(i)<<endl;
+    }
+    //Triangles
     for (int k=0;k<Th.nt;k++) {
         Triangle & K(Th[k]);
-        int i0(Th(K[0])),i1(Th(K[1])),i2(Th(K[2]));
-        cout<<"Th["<<k<<"]=  "<<i0<<"   "<<i1<<"    "<<i2<<"   "<<K.lab<<endl;
-	  }   
-    cout<<"Th.nv="<<Th.nv<<"   Th.nt="<<Th.nt<<"   Th.neb="<<Th.neb<<endl;    
-    for(int i=0;i<Th.nv;i++)
-      cout<<"Th("<<i<<")=  "<<Th(i)<<endl;
-
+        int i0(Th(K[0])),i1(Th(K[1])),i2(Th(K[2]));        
+        cout<<i0+1<<" "<<i1+1<<" "<<i2+1<<" "<<K.lab<<endl;
+        //cout<<"Th["<<k<<"]=  "<<i0+1<<"   "<<i1+1<<"    "<<i2+1<<"   "<<K.lab<<endl;
+	  }    
+    // Boundary Edges Fortran based convention
+    for (int ie=0 ;ie<Th.neb;ie++){ 
+        const BoundaryEdge & E(Th.bedges[ie]);
+        const Vertex & v0=E[0];
+        const Vertex & v1=E[1];
+        int lab=E.lab,i0(Th(v0)),i1(Th(v1));        
+        cout<<i0+1<<" "<<i1+1<<" "<<lab<<endl;        
+    }
     //======= Fin cout ==========================================================
     /* 
      * ==========================================
@@ -704,14 +730,16 @@ int main (int argc, char** argv){
     std::string exportFileName = baseName + "_adaptmesh_" + dateTimeStream.str() + "_" + std::to_string(adapt + 1) + ".msh";
 
     //========= Exporter le maillage ============================================
-    Th.exportMesh(exportFileName);
+    Th.exportMesh(exportFileName);// Point d'arrêt ici
 
     // Output for verification
     std::cout << "Base Name: " << baseName << std::endl;
-    std::cout << "Export File Name: " << exportFileName << std::endl;
+    std::cout << "Export Mesh File Name: after adapt="<<adapt<<"is:"<< exportFileName << std::endl;
 
     //========= Appel au découpage des arêtes ===== Adaptation du maillage ======    
-    if (adapt != 2)   adaptmesh(Th,un);    
+    if (adapt != 2)   {
+      adaptmesh(Th,un);    // Point d'arrêt ici
+    }
   
   }//========fin de résolution 'adapt' fois =====================================
 
